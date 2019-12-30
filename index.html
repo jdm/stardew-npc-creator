@@ -193,7 +193,7 @@
 <div id="schedule" class="stuff">
   <h3>Schedules</h3>
   <div id="schedules">
-    <select id="mapImage" onchange="changeMap(this.value)"></select><br>
+    <select id="mapImage" onchange="redrawMap(this.value, null, null)"></select><br>
     <canvas id="map"></canvas>
   </div>
 </div>
@@ -348,10 +348,40 @@
   function regenerateSchedules(schedules) {
   }
 
-  function changeMap(map) {
+  function coordToTileCoord(coord) {
+      return {
+          x: Math.trunc(coord.x / 16) * 16,
+          y: Math.trunc(coord.y / 16) * 16,
+      };
+  }
+
+  function redrawMap(map, hovered, selected) {
+      ctx.globalAlpha = 1.0;
       ctx.canvas.width = mapImages[map].width
       ctx.canvas.height = mapImages[map].height;
       ctx.drawImage(mapImages[map], 0, 0);
+      if (hovered) {
+          var tile = coordToTileCoord(hovered);
+          ctx.globalAlpha = 0.4;
+          ctx.fillStyle = "white";
+          ctx.fillRect(tile.x, tile.y, 16, 16);
+      }
+      if (selected) {
+          ctx.globalAlpha = 0.4;
+          ctx.fillStyle = "red";
+          var tile = coordToTileCoord(selected);
+          ctx.fillRect(tile.x, tile.y, 16, 16);
+          ctx.strokeStyle = "white";
+          ctx.strokeRect(tile.x, tile.y, 16, 16);
+      }
+  }
+
+  function canvasMouseCoordinates(canvas, evt) {
+      var rect = canvas.getBoundingClientRect();
+      return {
+          x: evt.clientX - rect.left,
+          y: evt.clientY - rect.top
+      };
   }
 
   var mapImages = {};
@@ -365,9 +395,19 @@
       opt.value = m;
       selectedImage.appendChild(opt);
   }
+  var selectedCoords = null;
   var canvas = document.querySelector('#map');
+  canvas.onmousemove = function(evt) {
+      var coords = canvasMouseCoordinates(canvas, evt);
+      redrawMap(selectedImage.value, coords, selectedCoords);
+  };
+  canvas.onclick = function(evt) {
+      var coords = canvasMouseCoordinates(canvas, evt);
+      selectedCoords = coords;
+      redrawMap(selectedImage.value, coords, selectedCoords);
+  };
   var ctx = canvas.getContext('2d');
-  mapImages[selectedImage.value].onload = () => changeMap(selectedImage.value);
+  mapImages[selectedImage.value].onload = () => redrawMap(selectedImage.value, null, null);
 
   function generate() {
       var manifest = {};
