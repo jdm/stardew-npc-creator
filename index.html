@@ -1,0 +1,557 @@
+<script src="FileSaver.js"></script>
+<script src="jszip.min.js"></script>
+<style>
+  .stuff {
+      display: flex;
+      flex-direction: column;
+      align-items: left;
+      padding: 1em;
+  }
+
+  .stuff div {
+      padding: 0.2em;
+  }
+
+  div label, div input, div select {
+  }
+
+  input[type="number"] {
+      width: 3em;
+  }
+
+  .item-list span {
+      display: inline-block;
+      margin: 0.2em;
+  }
+  .item-remover:hover {
+      text-decoration: underline;
+      cursor: pointer;
+  }
+</style>
+<div class="stuff">
+  <div>
+    <label for="modName">Mod name:</label>
+    <input id="modName">
+  </div>
+
+  <div>
+    <label for="author">Author:</label>
+    <input id="author">
+  </div>
+
+  <div>
+    <label for="description">Description:</label>
+    <input id="description">
+  </div>
+
+  <div>
+    <label for="version">Version:</label>
+    <input id="version-major" type="number" value="1" min="1">.
+    <input id="version-minor" type="number" value="0">.
+    <input id="version-patch" type="number" value="0">
+  </div>
+</div>
+
+<div class="stuff">
+  <div>
+    <label for="npc-name">NPC's name:</label>
+    <input id="npc-name">
+  </div>
+
+  <div>
+    <label for="npc-age">Age:</label>
+    <select id="npc-age">
+      <option>child</option>
+      <option>teen</option>
+      <option>adult</option>
+    </select>
+  </div>
+
+  <div>
+    <label for="npc-manners">Manners:</label>
+    <select id="npc-manners">
+      <option>polite</option>
+      <option>rude</option>
+      <option>neutral</option>
+    </select>
+    <label for="npc-anxiety">Social anxiety:</label>
+    <select id="npc-anxiety">
+      <option>outgoing</option>
+      <option>shy</option>
+      <option>neutral</option>
+    </select>
+    <label for="npc-optimism">Optimism:</label>
+    <select id="npc-optimism">
+      <option>positive</option>
+      <option>neutral</option>
+      <option>negative</option>
+    </select>
+  </div>
+
+  <div>
+    <label for="npc-gender">Gender:</label>
+    <select id="npc-gender">
+      <option>male</option>
+      <option>female</option>
+    </select>
+  </div>
+
+  <div>
+    <label for="npc-datable">Datable:</label>
+    <input id="npc-datable" type="checkbox">
+  </div>
+
+  <div>
+    <label for="npc-home">Home:</label>
+    <select id="npc-home">
+      <option>Town</option>
+      <option>Desert</option>
+      <option>Other</option>
+    </select>
+  </div>
+
+  <div>
+    <label for="npc-birthday-season">Birthday:</label>
+    <select id="npc-birthday-season">
+      <option>spring</option>
+      <option>summer</option>
+      <option>fall</option>
+      <option>winter</option>
+    </select>
+    <input id="npc-birthday-date" type="number" value="1" min="1" max="28">
+  </div>
+
+  <div>
+    <label>(optional)</label>
+    <label for="npc-mother">Mother:</label>
+    <input id="npc-mother">
+    <label for="npc-father">Father:</label>
+    <input id="npc-father">
+  </div>
+
+  <div>
+    <label for="npc-default-map">Default map and position:</label>
+    <input id="npc-default-map">
+    <input id="npc-default-x" type="number" value="0" min="0">
+    <input id="npc-default-y" type="number" value="0" min="0">
+  </div>
+
+</div>
+
+<div class="stuff">
+  <div>
+    <label for="npc-gift-love-text">Gift love response:</label>
+    <input id="npc-gift-love-text">
+  </div>
+  <div>
+    <label for="npc-gift-love">Gift loves:</label>
+    <ul class="item-list" id="npc-gift-love"></ul>
+  </div>
+  <div>
+    <label for="npc-gift-like-text">Gift like response:</label>
+    <div id="npc-gift-like-text">
+  </div>
+  <div>
+    <label for="npc-gift-like">Gift likes:</label>
+    <ul class="item-list" id="npc-gift-like"></ul>
+  </div>
+  <div>
+    <label for="npc-gift-dislike-text">Gift dislike response:</label>
+    <div id="npc-gift-dislike-text">
+  </div>
+  <div>
+    <label for="npc-gift-dislike">Gift dislikes:</label>
+    <ul class="item-list" id="npc-gift-dislike"></ul>
+  </div>
+  <div>
+    <label for="npc-gift-hate-text">Gift hate response:</label>
+    <input id="npc-gift-hate-text">
+  </div>
+  <div>
+    <label for="npc-gift-hate">Gift hates:</label>
+    <ul class="item-list" id="npc-gift-hate"></ul>
+  </div>
+  <div>
+    <label for="npc-birthday-gift-text">Birthday gift response:</label>
+    <input id="npc-birthday-gift-text">
+  </div>
+
+  <div>
+    <label for="items">Items:</label>
+    <select id="items"></select>
+    <button onclick="addItem('npc-gift-love')">Add love</button>
+    <button onclick="addItem('npc-gift-like')">Add like</button>
+    <button onclick="addItem('npc-gift-dislike')">Add dislike</button>
+    <button onclick="addItem('npc-gift-hate')">Add hate</button>
+  </div>
+</div>
+
+<div class="stuff">
+<!--    <label for="content">content.json</label>
+    <textarea id="content">
+//This is the main area where your NPC comes together...
+{
+	"Format": "1.9", //It's always recommended to use the current version of Content Patcher for best results!
+	"Changes": [
+	
+		{
+		
+			"LogName": "NPC Manifestation", //This is where we will add in you NPC's Disposition
+			"Action": "EditData", //The file just needs an edit.. do not use Load
+			"Target": "Data/NPCDispositions", //Be case sensitive
+			"Entries": { 
+			
+				"<NPC Name>": "<child/teen/adult choose one>/<polite/rude/neutral choose one>/<outgoing/shy/neutral choose one>/<male/female choose one>/<datable/not-datable choose one>/<This is reserved for NPC relations>/<Desert/Town/Other choose one>/<Birthday goes here>/<NPC's Family>/<Starting Location goes here>/<NPC Name.. can be different than the first one>",
+				//Example: "Abigail": "teen/rude/outgoing/neutral/female/datable/Sebastian/Town/fall 13/Caroline 'mom' Pierre 'dad'/SeedShop 1 9/Abigail",
+				//Second Example: "Hiroshi": "adult/polite/outgoing/positive/female/not-datable/null/Other/fall 13//BusStop 22 5/Satoshi",  Notice that the NPC has no family so it has a //
+				
+			},
+		},
+		
+		{
+		
+			"LogName": "NPC Gift Tastes", //This is how your NPC reacts to certain Items... You need to know the IDs of what you want your NPC to like/hate
+			"Action": "EditData", //Do not load.. just edit
+			"Target": "Data/NPCGiftTastes",
+			"Entries": {
+				"<NPC Name>": "I love what you gave me!/72 74 228 227 233/I like this./60 62 64 66 68 70 597 591 595/I don't like this./80 330/I hate this./2/That was very thoughtful of you./-4/ ", //last line is for birthday gifts keep it simple.
+				
+			},
+		},
+		
+		{
+		
+			"LogName": "Animations", //This is optional.. only if you made animation frames in your spritesheet
+			"Action": "EditData",
+			"Target": "Data/animationDescriptions",
+			"Entries": {
+				"<name the animation>": "the frames go here.. it can be a daunting task to get it perfect.",
+				"example": "17/17/17", //this just has frame 17 constantly
+				
+			},
+		},
+		
+		{
+		
+			"LogName": "Engagement Dialogue", //If you want to be able to have your NPC Married... this is needed or else they will not respond
+			"Action": "EditData",
+			"Target": "Data/EngagementDialogue",
+			"Entries": {
+				"<NPC Name0>": "   ", //If you named your NPC "Stennis" it would look like "Stennis0"  this is dialogue your NPC says while waiting to be married.
+				"<NPC Name1>": "   ", //These two dialogue points are all you need as after this dialogue you will be married the next day
+			},
+		},
+		
+		{
+		
+			"LogName": "Schedule Dialogue", //This is optional.. if you don't want to do this you don't have to
+			"Action": "Load",
+			"Target": "Strings/schedules/<NPC Name>",
+			"FromFile": "assets/Schedule/ScheduleDialogue.json",
+			
+		},
+		
+		{
+		
+			"LogName": "<NPC Name> Portraits", //Loads the portraits of your character
+			"Action": "Load",
+			"Target": "Portraits/<NPC Name>",
+			"FromFile": "assets/Image/<PortraitFileName.png>",
+			
+		},
+		
+		{
+		
+			"LogName": "<NPC Name> Sprites", //Loads the spritesheet for your NPC
+			"Action": "Load",
+			"Target": "Characters/<NPC Name>",
+			"FromFile": "assets/Image/<SpriteSheetName.png>",
+			
+		},
+		
+		{
+		
+			"LogName": "Dialogue", //Load this
+			"Action": "Load",
+			"Target": "Characters/Dialogue/<NPC Name>",
+			"FromFile": "assets/Dialogue/Dialogue.json",
+			
+		},
+		
+		{
+		
+			"LogName": "Schedule", //Load Schedule
+			"Action": "Load",
+			"Target": "Characters/schedules/<NPC Name>",
+			"FromFile": "assets/Schedule/Schedule.json",
+			
+		},
+		//This will cause your NPC to appear.. But that isn't really the end of your character... I hope
+		//From here you will need to Edit Event files, which I cannot be too specific about as you need creative freedom.. however I will try to explain the important Mechanics
+		//You will need to use EditData targeted to one of the event areas in Data/Events, for example, Data/Events/SeedShop
+		//Remember the following data: EventID/Conditions
+		//EventID is a unique number generated by you. (14003450 for example) make sure it's a high number so it is highly unlikely another modder uses it.
+		//Conditions are covered at the wiki: https://stardewvalleywiki.com/Modding:Event_data I cannot go to greatly in detail here but if you have questions, come find me on Discord.
+		//The first few event commands are a requirement: musicID/viewport/NPC and farmer placement
+		//The Music ID is a coded name for what music plays. Use Cane's Resource for a list of Music IDs: https://docs.google.com/spreadsheets/d/1CpDrw23peQiq-C7F2FjYOMePaYe0Rc9BwQsj3h6sjyo/edit#gid=239695361
+		//Veiwport is where the camera is.. you can use a debug mod to get these coordinates.  It only needs an X and Y (/54 20/)
+		//NPCs and farmer placement is next and must be done, lest you softlock.  The farmer MUST be placed even if you are not using him.  If you don't need the farmer, put the farmer on the coordinates -1000 1000 0.  You need x, y, and facingDirection.
+		//After this your event will begin.  You can do various things to make great effects.  Please refer to the wiki for commands as there is too many to talk about.
+		
+		//Here is a sample
+		{
+			
+			"LogName": "Event Sample",
+			"Action": "EditData",
+			"Target": "Data/Events/Town", //This will happen in Pelican Town
+			"Entries": {
+				"9588563/f <NPC Name> 500/t 700 1000": "springtown/34 82/farmer 28 74 2 <NPC Name> 35 81 2 Haley 35 82 0 Alex 34 82 0 Penny 35 89 2/.....",
+			
+			},
+		},
+		
+		//9588563 is the Event ID.  This Event has the following conditions: f <NPC Name> 500 mean you need to have at least two hearts with your NPC.  t 700 1000 means that this event only triggers between 7AM to 10AM ingame.  This translates that the event won't trigger until you have 2 hearts with your NPC and go to town between 7-10 AM.
+		//The Music ID is springtown.  And the viewport is near the saloon (34 82).  The farmer will be out of frame but standing in town while your NPC has Haley and Alex nearby.  Penny is at a nearby tree.  
+		//From here you will have to shape the event on your own using wiki and you can always come talk to me.
+	]
+}
+    </textarea>
+    !-->
+    
+  <p>
+    <label for="schedule">Schedule.json</label>
+    <textarea id="schedule">
+{
+	"spring": "610 BusStop 16 19 2/700 Town 37 89 2/1030 Beach 57 8 1 sunbathe \"Strings\\schedules\\Hiroshi:spring.000\"/1430 Saloon 9 20 0/1750 Saloon 39 19 2 martini \"Strings\\schedules\\Hiroshi:spring.001\"/2100 Saloon 26 23 3/2350 BusStop 22 5 2 \"Strings\\schedules\\Hiroshi:spring.002\"",
+	"summer": "610 BusStop 22 5 2/800 Beach 10 13 2 sunbathe \"Strings\\schedules\\Hiroshi:summer.000\"/1430 Saloon 9 20 0/1750 Saloon 39 19 2 martini \"Strings\\schedules\\Hiroshi:summer.001\"/2100 Saloon 26 23 3/2350 BusStop 22 5 2 \"Strings\\schedules\\Hiroshi:summer.002\"",
+	"fall": "600 BusStop 22 5 2/700 Town 37 89 2/1030 Beach 57 8 1/1430 Saloon 9 20 0/1750 Saloon 39 19 2/2100 Saloon 26 23 3/2350 BusStop 22 5 2",
+	"winter": "600 BusStop 22 5 2/700 Saloon 9 20 0/1430 Saloon 9 20 0/1750 Saloon 39 19 2/2100 Saloon 26 23 3/2350 BusStop 22 5 2",
+	"rain": "600 BusStop 22 5 2/700 Saloon 9 20 0/1430 Saloon 9 20 0/1750 Saloon 39 19 2/2100 Saloon 26 23 3/2350 BusStop 22 5 2",
+}
+    </textarea>
+
+  <p>
+    <label for="scheduleDialogue">ScheduleDialogue.json</label>
+    <textarea id="scheduleDialogue">
+{
+	"spring": "610 BusStop 16 19 2/700 Town 37 89 2/1030 Beach 57 8 1 sunbathe \"Strings\\schedules\\Hiroshi:spring.000\"/1430 Saloon 9 20 0/1750 Saloon 39 19 2 martini \"Strings\\schedules\\Hiroshi:spring.001\"/2100 Saloon 26 23 3/2350 BusStop 22 5 2 \"Strings\\schedules\\Hiroshi:spring.002\"",
+	"summer": "610 BusStop 22 5 2/800 Beach 10 13 2 sunbathe \"Strings\\schedules\\Hiroshi:summer.000\"/1430 Saloon 9 20 0/1750 Saloon 39 19 2 martini \"Strings\\schedules\\Hiroshi:summer.001\"/2100 Saloon 26 23 3/2350 BusStop 22 5 2 \"Strings\\schedules\\Hiroshi:summer.002\"",
+	"fall": "600 BusStop 22 5 2/700 Town 37 89 2/1030 Beach 57 8 1/1430 Saloon 9 20 0/1750 Saloon 39 19 2/2100 Saloon 26 23 3/2350 BusStop 22 5 2",
+	"winter": "600 BusStop 22 5 2/700 Saloon 9 20 0/1430 Saloon 9 20 0/1750 Saloon 39 19 2/2100 Saloon 26 23 3/2350 BusStop 22 5 2",
+	"rain": "600 BusStop 22 5 2/700 Saloon 9 20 0/1430 Saloon 9 20 0/1750 Saloon 39 19 2/2100 Saloon 26 23 3/2350 BusStop 22 5 2",
+}
+    </textarea>
+
+  <p>
+    <label for="Dialogue">Dialogue.json</label>
+    <textarea id="dialogue">
+{
+
+	"Introduction": "Hello, @!  That symbol I used tells me to use your name.  I can also use %farm to mention your farm.#$b#That is an uninterrupted break.. Keeps the dialogue going.#$e#This was a normal break... meaning you have to talk to me again.#$b#That should cover the basic dialogue.",
+	"Mon": "Hey @, I got a quick question for you...#$b#$q 6000/6001 mon_template#Do you know how to make question events?#$r 6000 250 mon_yes#Sure do#$r 6001 500 mon_no#I don't know how",
+	"mon_yes": "That's great to know... You should use them once in a while to help develop closer bonds to your NPC",
+	"mon_no": "No? Well let's look at my question.#$b# The first part is the question indicator.. the dollar sign+ the q.. This tells the game that I am about to ask a question.#$b#The first set of numbers are my response IDs.  The game will store the response to these numbers. #$b#The mon_template is my fallback... how I talk to you after the question has been answered.#$b# The dollar sign + r indicates that you are starting responses, the first number is the ID of the response and the second number is how many friendship points it gives. One heart is 250 points.  It also needs a response dialogue from me as well.#$b#Notice that responses and questions are divided by hashtags.",
+	"mon_template": "$p 6000#If you answered yes... You will see this dialogue.|If you did not, you will see this dialogue.",
+	"Tue": "MissCoriel can be helpful in many dialogue and events.  You can reach her on discord!#$b# Her ID is MissCoriel#7989!",
+	"Wed": "Portrait expressions are important to convey the scene.$1#$b#When making portraits, remember this:#$b#1 is happy, 2 is sad, 3 is unique, 4 is blushing, 5 is angry.#$b#You can have up to 12 portraits as far as I know.",
+	"Thu": "Some dialogue is found elsewhere in the contents.. I will help you find the most relavent.",
+	"Fri": "You can also give people items like this. [70]#$b#Use Cane's Resource to see Item IDs and other important things.",
+	
+}
+    </textarea>
+
+  <p>
+    <label for="marriageDialogue">MarriageDialogue.json</label>
+    <textarea id="marriageDialogue">
+{    
+	"Rainy_Day_0": "  ",
+    "Rainy_Day_1": "  ",
+    "Rainy_Day_2": "  ",
+    "Rainy_Day_3": "  ",
+    "Rainy_Day_4": "  ",
+    "patio_NPCName": " You need to declare the spouse name. (Example: patio_Haley)",
+    "Rainy_Day_NPCName": "Be sure to put your NPC's name.",
+    "Rainy_Night_0": "  ",
+    "Rainy_Night_1": "  ",
+    "Rainy_Night_2": "  ",
+    "Rainy_Night_3": "  ",
+    "Rainy_Night_4": "  ",
+    "Rainy_Night_5": "  ",
+    "Rainy_Night_NPCName": "  ",
+    "Indoor_Day_0": "  ",
+    "Indoor_Day_1": "  ",
+    "Indoor_Day_2": "  ",
+    "Indoor_Day_3": "  ",
+    "Indoor_Day_4": "  ",
+    "Indoor_Day_NPCName": "  ",
+    "Indoor_Night_0": "  ",
+    "Indoor_Night_1": "  ",
+    "Indoor_Night_2": "  ",
+    "Indoor_Night_3": "  ",
+    "Indoor_Night_4": "  ",
+    "Indoor_Night_NPCName": "Don't forget to fill in your NPC's Name",
+    "Outdoor_0": "  ",
+    "Outdoor_1": "  ",
+    "Outdoor_2": "  ",
+    "Outdoor_3": "  ",
+    "Outdoor_4": "  ",
+    "Outdoor_NPCName": "Don't forget to fill in your NPC's Name",
+    "funLeave_NPCName": "Don't forget to fill in your NPC's Name",
+    "funReturn_NPCName": "Don't forget to fill in your NPC's Name",
+    "OneKid_3": "You can have 3 of these",
+    "TwoKids_0": "  ",
+    "TwoKids_2": "  ",
+    "TwoKids_3": "  ",
+    "Good_1": "  ",
+    "Good_2": "  ",
+    "Good_3": "  ",
+    "Good_4": "  ",
+    "Good_5": "  ",
+    "Good_6": "  ",
+    "Good_7": "  ",
+    "Neutral_0": "  ",
+    "Neutral_1": "  ",
+    "Neutral_6": "  ",
+    "Neutral_7": "  ",
+    "Neutral_8": "  ",
+    "Neutral_9": "  ",
+    "Bad_7": "  ",
+    "Bad_8": "  ",
+    "Bad_9": "  ",
+
+}
+    </textarea>
+</div>
+
+<button onclick="generate()">Create content pack</button>
+
+<script>
+  var itemsXhr = new XMLHttpRequest();
+  itemsXhr.responseType = 'json';
+  itemsXhr.onload = function() {
+      var items = document.querySelector('#items');
+      var itemsData = itemsXhr.response['content'];
+      for (const item of Object.keys(itemsData)) {
+          var option = document.createElement('option');
+          option.value = item;
+          option.textContent = itemsData[item].split('/')[0];
+          items.appendChild(option);
+      }
+  };
+  itemsXhr.onerror = function(e) {
+      console.error(e);
+  };
+  itemsXhr.open("GET", "ObjectInformation.json", true);
+  itemsXhr.send();
+
+  function addItem(id) {
+      var elem = document.createElement('li');
+      var inner = document.createElement('span');
+      var items = document.querySelector('#items');
+      inner.value = items.value;
+      elem.textContent = items.options[items.selectedIndex].textContent;
+      elem.appendChild(inner);
+      var remover = document.createElement('span');
+      remover.className = "item-remover";
+      remover.onclick = function() {
+          console.log("hi");
+          this.parentNode.remove();
+      };
+      remover.textContent = "[X]";
+      elem.appendChild(remover);
+      document.getElementById(id).appendChild(elem);
+  }
+
+  function removeItem(id) {
+  }
+  
+  function generate() {
+      //var manifest = document.querySelector('#manifest').textContent;
+      var manifest = {};
+      manifest["Name"] = document.querySelector('#modName').value;
+      manifest["Author"] = document.querySelector('#author').value;
+      manifest["Description"] = document.querySelector('#description').value;
+      manifest["Version"] = document.querySelector('#version-major').value + '.' +
+          document.querySelector('#version-minor').value + '.' +
+          document.querySelector('#version-patch').value;
+      manifest["UniqueID"] = manifest["Author"].replace(' ', '_') + "." +
+          manifest["Name"].replace(' ', '_');
+      manifest["ContentPackFor"] = { "UniqueID": "Pathoschild.ContentPatcher" };
+      manifest["UpdateKeys"] = [ "" ];
+
+      var content = {};
+      content["Format"] = "1.9";
+      var changes = [];
+
+      var manifestationEntries = {};
+      var npcName = document.querySelector("#npc-name").value;
+      manifestationEntries[npcName] = [
+          document.querySelector('#npc-age').value,
+          document.querySelector('#npc-manners').value,
+          document.querySelector('#npc-anxiety').value,
+          document.querySelector('#npc-optimism').value,
+          document.querySelector('#npc-gender').value,
+          document.querySelector('#npc-datable').checked ? "datable" : "not-datable",
+          "",
+          document.querySelector('#npc-home').value,
+          document.querySelector('#npc-birthday-season').value + " " +
+              document.querySelector("#npc-birthday-date").value,
+          (document.querySelector('#npc-mother').value ?
+           document.querySelector('#npc-mother').value + " 'mom' " : "") +
+              (document.querySelector('#npc-father').value ?
+               document.querySelector('#npc-father').value + " 'dad'" : ""),
+          document.querySelector('#npc-default-map').value + " " +
+              document.querySelector('#npc-default-x').value + " " +
+              document.querySelector('#npc-default-y').value,
+          npcName,
+      ].join('/');
+
+      changes.push({
+          "LogName": "NPC Manifestation",
+          "Action": "EditData",
+          "Target": "Data/NPCDispositions",
+          "Entries": manifestationEntries,
+      });
+
+      var giftEntries = {};
+      giftEntries[npcName] = [
+      ].join('/');
+
+      changes.push({
+          "LogName": "NPC Gift Tastes",
+          "Action": "EditData",
+          "Target": "Data/NPCGiftTastes",
+          "Entries": giftEntries,
+      });
+
+      content["Changes"] = changes;
+      
+      
+
+      var content = document.querySelector('#content').textContent;
+      var schedule = document.querySelector('#schedule').textContent;
+      var scheduleDialogue = document.querySelector('#scheduleDialogue').textContent;
+      var dialogue = document.querySelector('#dialogue').textContent;
+      var marriageDialogue = document.querySelector('#marriageDialogue').textContent;
+
+
+      var zip = new JSZip();
+      zip.file("manifest.json", JSON.stringify(manifest, undefined, 4));
+      zip.file("content.json", content);
+      var assets = zip.folder("assets");
+      var scheduleDir = assets.folder("Schedule");
+      scheduleDir.file("Schedule.json", schedule);
+      scheduleDir.file("ScheduleDialogue.json", scheduleDialogue);
+  
+      var dialogueDir = assets.folder("Dialogue");
+      dialogueDir.file("Dialogue.json", dialogue);
+      dialogueDir.file("MarriageDialogue.json", marriageDialogue);
+
+      var image = assets.folder("Image");
+
+      zip.generateAsync({type:"blob"})
+          .then(function(content) {
+              saveAs(content, "example.zip");
+          });
+  }
+</script>
