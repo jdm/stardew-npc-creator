@@ -12,6 +12,10 @@
       padding: 0.2em;
   }
 
+  #gifts, #disposition, #manifest, #other {
+      display: none;
+  }
+
   div label, div input, div select {
   }
 
@@ -28,7 +32,7 @@
       cursor: pointer;
   }
 </style>
-<div class="stuff">
+<div id="manifest" class="stuff">
   <div>
     <label for="modName">Mod name:</label>
     <input id="modName">
@@ -52,7 +56,7 @@
   </div>
 </div>
 
-<div class="stuff">
+<div id="disposition" class="stuff">
   <div>
     <label for="npc-name">NPC's name:</label>
     <input id="npc-name">
@@ -138,7 +142,7 @@
 
 </div>
 
-<div class="stuff">
+<div id="gifts" class="stuff">
   <div>
     <label for="npc-gift-love-text">Gift love response:</label>
     <input id="npc-gift-love-text">
@@ -186,7 +190,14 @@
   </div>
 </div>
 
-<div class="stuff">
+<div id="schedule" class="stuff">
+  <h3>Schedules</h3>
+  <div id="schedules">
+  </div>
+  <h3>
+</div>
+
+<div id="other" class="stuff">
 <!--  <p>
     <label for="schedule">Schedule.json</label>
     <textarea id="schedule">
@@ -316,6 +327,7 @@
   function addItem(id) {
       var elem = document.createElement('li');
       var inner = document.createElement('span');
+      inner.className = "item-value";
       var items = document.querySelector('#items');
       inner.value = items.value;
       elem.textContent = items.options[items.selectedIndex].textContent;
@@ -331,9 +343,10 @@
       document.getElementById(id).appendChild(elem);
   }
 
-  function removeItem(id) {
+  var schedules = [];
+  function regenerateSchedules(schedules) {
   }
-  
+
   function generate() {
       var manifest = {};
       manifest["Name"] = document.querySelector('#modName').value;
@@ -381,9 +394,24 @@
           "Entries": manifestationEntries,
       });
 
+      function appendItems(list, id) {
+          list.push(document.getElementById(id + '-text').value);
+          var items = [];
+          var allItems = document.querySelectorAll('#' + id + ' li span.item-value');
+          for (const e of allItems) {
+              items.push(e.value);
+          }
+          list.push(items.join(' '));
+      }
+
       var giftEntries = {};
-      giftEntries[npcName] = [
-      ].join('/');
+      giftEntries[npcName] = [];
+      var lists = ['npc-gift-love', 'npc-gift-like', 'npc-gift-dislike', 'npc-gift-hate'];
+      for (const list of lists) {
+          appendItems(giftEntries[npcName], list)
+      }
+      giftEntries[npcName].push(document.querySelector('#npc-birthday-gift-text').value);
+      giftEntries[npcName] = giftEntries[npcName].join('/');
 
       changes.push({
           "LogName": "NPC Gift Tastes",
@@ -454,7 +482,7 @@
 
       var zip = new JSZip();
       zip.file("manifest.json", JSON.stringify(manifest, undefined, 4));
-      zip.file("content.json", content);
+      zip.file("content.json", JSON.stringify(content, undefined, 4));
       var assets = zip.folder("assets");
       var scheduleDir = assets.folder("Schedule");
       scheduleDir.file("Schedule.json", schedule);
