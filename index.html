@@ -193,8 +193,9 @@
 <div id="schedule" class="stuff">
   <h3>Schedules</h3>
   <div id="schedules">
+    <select id="mapImage" onchange="changeMap(this.value)"></select><br>
+    <canvas id="map"></canvas>
   </div>
-  <h3>
 </div>
 
 <div id="other" class="stuff">
@@ -346,6 +347,27 @@
   var schedules = [];
   function regenerateSchedules(schedules) {
   }
+
+  function changeMap(map) {
+      ctx.canvas.width = mapImages[map].width
+      ctx.canvas.height = mapImages[map].height;
+      ctx.drawImage(mapImages[map], 0, 0);
+  }
+
+  var mapImages = {};
+  var maps = ["Town", "Beach", "Mountain", "BusStop", "Forest", "Saloon", "Backwoods"];
+  var selectedImage = document.querySelector('#mapImage');
+  for (const m of maps) {
+      mapImages[m] = new Image();
+      mapImages[m].src = m + ".png";
+      var opt = document.createElement('option');
+      opt.textContent = m;
+      opt.value = m;
+      selectedImage.appendChild(opt);
+  }
+  var canvas = document.querySelector('#map');
+  var ctx = canvas.getContext('2d');
+  mapImages[selectedImage.value].onload = () => changeMap(selectedImage.value);
 
   function generate() {
       var manifest = {};
