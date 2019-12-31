@@ -273,18 +273,6 @@
 </div>
 
 <div id="other" class="stuff hidden">
-<!--  <p>
-    <label for="schedule">Schedule.json</label>
-    <textarea id="schedule">
-{
-	"spring": "610 BusStop 16 19 2/700 Town 37 89 2/1030 Beach 57 8 1 sunbathe \"Strings\\schedules\\Hiroshi:spring.000\"/1430 Saloon 9 20 0/1750 Saloon 39 19 2 martini \"Strings\\schedules\\Hiroshi:spring.001\"/2100 Saloon 26 23 3/2350 BusStop 22 5 2 \"Strings\\schedules\\Hiroshi:spring.002\"",
-	"summer": "610 BusStop 22 5 2/800 Beach 10 13 2 sunbathe \"Strings\\schedules\\Hiroshi:summer.000\"/1430 Saloon 9 20 0/1750 Saloon 39 19 2 martini \"Strings\\schedules\\Hiroshi:summer.001\"/2100 Saloon 26 23 3/2350 BusStop 22 5 2 \"Strings\\schedules\\Hiroshi:summer.002\"",
-	"fall": "600 BusStop 22 5 2/700 Town 37 89 2/1030 Beach 57 8 1/1430 Saloon 9 20 0/1750 Saloon 39 19 2/2100 Saloon 26 23 3/2350 BusStop 22 5 2",
-	"winter": "600 BusStop 22 5 2/700 Saloon 9 20 0/1430 Saloon 9 20 0/1750 Saloon 39 19 2/2100 Saloon 26 23 3/2350 BusStop 22 5 2",
-	"rain": "600 BusStop 22 5 2/700 Saloon 9 20 0/1430 Saloon 9 20 0/1750 Saloon 39 19 2/2100 Saloon 26 23 3/2350 BusStop 22 5 2",
-}
-    </textarea>-->
-
   <p>
     <label for="scheduleDialogue">ScheduleDialogue.json</label>
     <textarea id="scheduleDialogue">
@@ -651,7 +639,43 @@
 
       content["Changes"] = changes;
 
-      var schedule = document.querySelector('#schedule').textContent;
+      var scheduleData = {};
+      var rainIndex = null;
+      for (const schedule of allSchedules) {
+          const keys = {
+              "seasonal": ["season"],
+              "day-of-week": ["day"],
+              "day-of-week-season": ["season", "day"],
+              "month-day": ["date"],
+              "season-day": ["season", "date"],
+              "rain": [],
+          };
+          console.log(schedule);
+          var name = keys[schedule.type].map((k) => schedule.conditions[k]).join("_");
+          if (schedule.type == "rain") {
+              name = "rain";
+              if (rainIndex !== null) {
+                  name += rainIndex;
+                  rainIndex += 1;
+              } else {
+                  rainIndex = 2;
+              }
+          }
+          scheduleData[name] = schedule.elements.map((e) => {
+              var elements = [
+                  e.hour.toString() + e.minute.toString(),
+                  e.map,
+                  e.x,
+                  e.y,
+                  e.facing,
+              ];
+              if (e.animation != null) {
+                  elements.push(e.animation);
+              }
+              return elements.join(' ');
+          }).join('/');
+      }
+
       var scheduleDialogue = document.querySelector('#scheduleDialogue').textContent;
       var dialogue = document.querySelector('#dialogue').textContent;
       var marriageDialogue = document.querySelector('#marriageDialogue').textContent;
@@ -661,7 +685,7 @@
       zip.file("content.json", JSON.stringify(content, undefined, 4));
       var assets = zip.folder("assets");
       var scheduleDir = assets.folder("Schedule");
-      scheduleDir.file("Schedule.json", schedule);
+      scheduleDir.file("Schedule.json", JSON.stringify(scheduleData, undefined, 4));
       scheduleDir.file("ScheduleDialogue.json", scheduleDialogue);
   
       var dialogueDir = assets.folder("Dialogue");
@@ -763,6 +787,7 @@
           x: last ? last.x : null,
           y: last ? last.y : null,
           facing: 0,
+          animation: null,
       });
       recreateSchedule();
   }
@@ -809,6 +834,7 @@
       for (const idx in currentSchedule.elements) {
           const c = currentSchedule.elements[idx];
           var item = document.createElement('li');
+
           var hour = document.createElement('select');
           hour.onchange = function(idx) {
               currentSchedule.elements[idx].hour = hour.value;
@@ -822,7 +848,9 @@
               hour.appendChild(elem);
           }
           item.appendChild(hour);
+
           item.appendChild(document.createTextNode(':'));
+
           var minute = document.createElement('select');
           minute.onchange = function(idx) {
               currentSchedule.elements[idx].minute = minute.value;
@@ -840,6 +868,7 @@
               minute.appendChild(elem);
           }
           item.appendChild(minute);
+
           if (currentSchedule.elements[idx].x !== null && currentSchedule.elements[idx].x !== null) {
               item.appendChild(document.createTextNode(
                   "at " + currentSchedule.elements[idx].x + ", " +
@@ -847,6 +876,7 @@
                       " (" + currentSchedule.elements[idx].map + ")"
               ));
           }
+
           var posSelect = document.createElement('button');
           posSelect.onclick = function(idx) {
               document.querySelector('#schedule-new-choose-position').classList.remove('hidden');
@@ -870,6 +900,7 @@
           item.appendChild(posSelect);
 
           item.appendChild(document.createTextNode('facing'));
+
           var facing = document.createElement('select');
           facing.onchange = function() {
               currentSchedule.elements[idx].facing = facing.value;
@@ -885,6 +916,8 @@
               facing.appendChild(opt);
           }
           item.appendChild(facing);
+
+          // TODO: show select for possible animations
 
           list.appendChild(item);
       }
