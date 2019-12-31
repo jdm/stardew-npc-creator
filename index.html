@@ -12,6 +12,10 @@
       padding: 0.2em;
   }
 
+  #picker {
+      display: block;
+  }
+
   input[type="number"] {
       width: 3em;
   }
@@ -161,9 +165,11 @@
 
   <div>
     <label for="npc-default-map">Default map and position:</label>
-    <input id="npc-default-map">
-    <input id="npc-default-x" type="number" value="0" min="0">
-    <input id="npc-default-y" type="number" value="0" min="0">
+    <input type="hidden" id="npc-default-map">
+    <input type="hidden" id="npc-default-x">
+    <input type="hidden" id="npc-default-y">
+    <span id="default-position"></span>
+    <button onclick="createDefaultPosChooser()">Choose position</button>
   </div>
 
 </div>
@@ -261,12 +267,6 @@
     <br><br>
     <button onclick="finishSchedule()">Finish schedule</button>
     <button onclick="discardSchedule()">Discard schedule</button>
-  </div>
-  <div id="schedule-new-choose-position" class="hidden">
-    <select id="mapImage" onchange="redrawMap(this.value, null, null, true)"></select><br>
-    <canvas id="map"></canvas><br>
-    <button onclick="chooseSelectedPosition()">Choose selected position</button>
-    <button onclick="cancelChoosePosition()">Cancel</button>
   </div>
 </div>
 
@@ -374,6 +374,9 @@
   <button onclick="generate()">Create content pack</button>
 </div>
 
+<div class="stuff hidden" id="picker">
+</div>
+
 <script>
   var itemsXhr = new XMLHttpRequest();
   itemsXhr.responseType = 'json';
@@ -461,7 +464,7 @@
       };
   }
 
-  function redrawMap(map, hovered, selected, newMap) {
+  function redrawMap(ctx, map, hovered, selected, newMap) {
       if (newMap) {
           selectedCoords = null;
       }
@@ -495,28 +498,11 @@
 
   var mapImages = {};
   var maps = ["Town", "Beach", "Mountain", "BusStop", "Forest", "Saloon", "Backwoods"];
-  var selectedImage = document.querySelector('#mapImage');
   for (const m of maps) {
       mapImages[m] = new Image();
       mapImages[m].src = m + ".png";
-      var opt = document.createElement('option');
-      opt.textContent = m;
-      opt.value = m;
-      selectedImage.appendChild(opt);
   }
   var selectedCoords = null;
-  var canvas = document.querySelector('#map');
-  canvas.onmousemove = function(evt) {
-      var coords = canvasMouseCoordinates(canvas, evt);
-      redrawMap(selectedImage.value, coords, selectedCoords, false);
-  };
-  canvas.onclick = function(evt) {
-      var coords = canvasMouseCoordinates(canvas, evt);
-      selectedCoords = coords;
-      redrawMap(selectedImage.value, coords, selectedCoords, false);
-  };
-  var ctx = canvas.getContext('2d');
-  mapImages[selectedImage.value].onload = () => redrawMap(selectedImage.value, null, null);
 
   function generate() {
       var manifest = {};
@@ -886,22 +872,20 @@
 
           var posSelect = document.createElement('button');
           posSelect.onclick = function(idx) {
-              document.querySelector('#schedule-new-choose-position').classList.remove('hidden');
-              document.querySelector('#schedule-new').classList.add('hidden');
               currentScheduleElement = currentSchedule.elements[idx];
-              var images = document.querySelector("#mapImage");
-              for (const imageIdx in images.options) {
-                  if (images.options[imageIdx].value == currentScheduleElement.map) {
-                      images.selectedIndex = imageIdx;
-                  }
-              }
-              if (currentScheduleElement.x !== null && currentScheduleElement.y !== null) {
-                  selectedCoords = {
+              var defaultCoord = currentScheduleElement.x !== null ?
+                  {
                       x: currentScheduleElement.x * 16,
                       y: currentScheduleElement.y * 16,
-                  };
-              }
-              redrawMap(images.value, null, null, false);
+                  } :
+                  null;
+              createPositionChooser(
+                  'schedule-new',
+                  chooseSelectedPosition,
+                  cancelChoosePosition,
+                  currentScheduleElement.map,
+                  defaultCoord,
+              );
           }.bind(null, idx);
           posSelect.textContent = "Choose position";
           item.appendChild(posSelect);
@@ -930,24 +914,110 @@
       }
   }
 
-  function chooseSelectedPosition() {
-      if (selectedCoords === null) {
-          cancelChoosePosition();
-          return;
-      }
-      var coords = coordToTileCoord(selectedCoords);
-      currentScheduleElement.x = coords.x / 16;
-      currentScheduleElement.y = coords.y / 16;
-      currentScheduleElement.map = document.querySelector('#mapImage').value;
-      cancelChoosePosition();
+  function chooseSelectedPosition(map, coords) {
+      currentScheduleElement.x = coords.x;
+      currentScheduleElement.y = coords.y;
+      currentScheduleElement.map = map;
+      cancelChoosePosition()
   }
 
   function cancelChoosePosition() {
-      selectedCoords = null;
       currentScheduleElement = null;
-      document.querySelector('#schedule-new-choose-position').classList.add('hidden');
-      document.querySelector('#schedule-new').classList.remove('hidden');
       recreateSchedule();
+  }
+
+  function createDefaultPosChooser() {
+      var defaultCoord = document.querySelector('#npc-default-x').value !== "" ?
+          {
+              x: parseInt(document.querySelector('#npc-default-x').value),
+              y: parseInt(document.querySelector('#npc-default-y').value),
+          } :
+          null;
+      createPositionChooser(
+          'disposition',
+          onDefaultPosChoose,
+          onDefaultPosCancel,
+          document.querySelector('#npc-default-map').value,
+          defaultCoord,
+      );
+  }
+
+  function onDefaultPosChoose(map, coord) {
+      document.querySelector("#npc-default-x").value = coord.x;
+      document.querySelector("#npc-default-y").value = coord.y;
+      document.querySelector("#default-position").textContent = map + " at " + coord.x + ", " + coord.y;
+  }
+
+  function onDefaultPosCancel() {
+  }
+
+  function createPositionChooser(idToHide, onChoose, onCancel, defaultImage, defaultCoords) {
+      document.getElementById(idToHide).classList.add('hidden');
+      var picker = document.querySelector("#picker");
+      picker.classList.remove('hidden');
+      picker.innerHTML = "";
+
+      var mapChooser = document.createElement('select');
+      mapChooser.onchange = function() {
+          redrawMap(ctx, this.value, null, null, true);
+      };
+      for (const map of maps) {
+          var opt = document.createElement('option');
+          opt.textContent = map;
+          opt.value = map;
+          if (map == defaultImage) {
+              opt.defaultSelected = true;
+          }
+          mapChooser.appendChild(opt);
+      }
+      var canvas = document.createElement('canvas');
+      var ctx = canvas.getContext('2d');
+      canvas.onmousemove = function(evt) {
+          var coords = canvasMouseCoordinates(canvas, evt);
+          redrawMap(ctx, mapChooser.value, coords, selectedCoords, false);
+      };
+      canvas.onclick = function(evt) {
+          var coords = canvasMouseCoordinates(canvas, evt);
+          selectedCoords = coords;
+          chooseButton.disabled = false;
+          redrawMap(ctx, mapChooser.value, coords, selectedCoords, false);
+      };
+
+      function restore() {
+          picker.innerHTML = "";
+          picker.classList.add('hidden');
+          document.getElementById(idToHide).classList.remove('hidden');
+      }
+
+      var chooseButton = document.createElement('button');
+      chooseButton.onclick = function() {
+          restore();
+          var coords = coordToTileCoord(selectedCoords);
+          onChoose(mapChooser.value, { x: coords.x / 16, y: coords.y / 16 });
+      };
+      chooseButton.disabled = true;
+      chooseButton.textContent = "Choose selected position";
+
+      var cancelButton = document.createElement('button');
+      cancelButton.onclick = function() {
+          restore();
+          onCancel();
+      }
+      cancelButton.textContent = "Cancel";
+
+      if (defaultCoords !== null) {
+          selectedCoords = {
+              x: defaultCoords.x * 16,
+              y: defaultCoords.y * 16,
+          };
+      }
+
+      picker.appendChild(mapChooser);
+      picker.appendChild(canvas);
+      picker.appendChild(document.createElement('br'));
+      picker.appendChild(chooseButton);
+      picker.appendChild(cancelButton);
+      redrawMap(ctx, mapChooser.value, null, null, false);
   }
 
   for (var i = 1; i <= 28; i++) {
