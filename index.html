@@ -20,10 +20,6 @@
       display: inline-block;
       margin: 0.2em;
   }
-  .item-remover:hover {
-      text-decoration: underline;
-      cursor: pointer;
-  }
 
   #tabs {
       display: flex;
@@ -405,12 +401,11 @@
       inner.value = items.value;
       elem.textContent = items.options[items.selectedIndex].textContent;
       elem.appendChild(inner);
-      var remover = document.createElement('span');
-      remover.className = "item-remover";
+      var remover = document.createElement('button');
       remover.onclick = function() {
           this.parentNode.remove();
       };
-      remover.textContent = "[X]";
+      remover.textContent = "delete";
       elem.appendChild(remover);
       document.getElementById(id).appendChild(elem);
   }
