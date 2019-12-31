@@ -12,13 +12,6 @@
       padding: 0.2em;
   }
 
-  #gifts, #disposition, #manifest, #schedule, #other {
-      display: none;
-  }
-
-  div label, div input, div select {
-  }
-
   input[type="number"] {
       width: 3em;
   }
@@ -54,6 +47,10 @@
       text-decoration: underline;
       font-weight: bold;
   }
+
+  div.hidden {
+      display: none;
+  }
 </style>
 
 <div id="tabs">
@@ -64,7 +61,7 @@
   <span id="tab-other" onclick="switchTab('other')">Other</span>
 </div>
 
-<div id="manifest" class="stuff">
+<div id="manifest" class="stuff hidden">
   <div>
     <label for="modName">Mod name:</label>
     <input id="modName">
@@ -88,7 +85,7 @@
   </div>
 </div>
 
-<div id="disposition" class="stuff">
+<div id="disposition" class="stuff hidden">
   <div>
     <label for="npc-name">NPC's name:</label>
     <input id="npc-name">
@@ -174,7 +171,7 @@
 
 </div>
 
-<div id="gifts" class="stuff">
+<div id="gifts" class="stuff hidden">
   <div>
     <label for="npc-gift-love-text">Gift love response:</label>
     <input id="npc-gift-love-text">
@@ -223,14 +220,91 @@
 </div>
 
 <div id="schedule" class="stuff">
-  <h3>Schedules</h3>
-  <div id="schedules">
+  <div id="schedules-all">
+    <ul id="schdules-list">
+    </ul>
+    <button onclick="newSchedule()">Add new schedule</button>
+  </div>
+  <div id="schedule-new" class="hidden">
+    <h5>When does this schedule run?</h5>
+    <select id="schedule-type" onchange="scheduleTypeChanged()">
+      <option value="seasonal">Every day in a season</option>
+      <option value="day-of-week">Day of week, all seasons</option>
+      <option value="day-of-week-season">Day of week, single season</option>
+      <option value="month-day">Day of month, all seasons</option>
+      <option value="season-day">Day of month, single season</option>
+      <option value="rain">Rainy day</option>
+      <!-- TODO: marriage schedules !-->
+    </select>
+    <div id="schedule-seasonal" class="schedule-type-selector hidden">
+      <select id="schedule-season">
+        <option>spring</option>
+        <option>summer</option>
+        <option>fall</option>
+        <option>winter</option>
+      </select>
+    </div>
+    <div id="schedule-day-of-week" class="schedule-type-selector hidden">
+      <select id="schedule-week-day">
+        <option value="Mon">Monday</option>
+        <option value="Tue">Tuesday</option>
+        <option value="Wed">Wednesday</option>
+        <option value="Thu">Thursday</option>
+        <option value="Fri">Friday</option>
+        <option value="Sat">Saturday</option>
+        <option value="Sun">Sunday</option>
+      </select>
+    </div>
+    <div id="schedule-day-of-week-season" class="schedule-type-selector hidden">
+      <select id="schedule-week-day-season-season">
+        <option>spring</option>
+        <option>summer</option>
+        <option>fall</option>
+        <option>winter</option>
+      </select>
+      <select id="schedule-week-day-season-day">
+        <option value="Mon">Monday</option>
+        <option value="Tue">Tuesday</option>
+        <option value="Wed">Wednesday</option>
+        <option value="Thu">Thursday</option>
+        <option value="Fri">Friday</option>
+        <option value="Sat">Saturday</option>
+        <option value="Sun">Sunday</option>
+      </select>
+    </div>
+    <div id="schedule-month-day" class="schedule-type-selector hidden">
+      <select id="schedule-month-day-choice">
+      </select>
+    </div>
+    <div id="schedule-season-day" class="schedule-type-selector hidden">
+      <select id="schedule-season-day-season">
+        <option>spring</option>
+        <option>summer</option>
+        <option>fall</option>
+        <option>winter</option>
+      </select>
+      <select id="schedule-season-day-day">
+      </select>
+    </div>
+    <div id="schedule-rain" class="schedule-type-selector hidden">
+    </div>
+    <h5>Actions</h5>
+    <ol id="schedule-components">
+    </ol>
+    <button onclick="addScheduleComponent()">Add schedule action</button>
+    <br><br>
+    <button onclick="finishSchedule()">Finish schedule</button>
+    <button onclick="discardSchedule()">Discard schedule</button>
+  </div>
+  <div id="schedule-new-choose-position" class="hidden">
     <select id="mapImage" onchange="redrawMap(this.value, null, null)"></select><br>
-    <canvas id="map"></canvas>
+    <canvas id="map"></canvas><br>
+    <button onclick="chooseSelectedPosition()">Choose selected position</button>
+    <button onclick="cancelChoosePosition()">Cancel</button>
   </div>
 </div>
 
-<div id="other" class="stuff">
+<div id="other" class="stuff hidden">
 <!--  <p>
     <label for="schedule">Schedule.json</label>
     <textarea id="schedule">
@@ -247,11 +321,9 @@
     <label for="scheduleDialogue">ScheduleDialogue.json</label>
     <textarea id="scheduleDialogue">
 {
-	"spring": "610 BusStop 16 19 2/700 Town 37 89 2/1030 Beach 57 8 1 sunbathe \"Strings\\schedules\\Hiroshi:spring.000\"/1430 Saloon 9 20 0/1750 Saloon 39 19 2 martini \"Strings\\schedules\\Hiroshi:spring.001\"/2100 Saloon 26 23 3/2350 BusStop 22 5 2 \"Strings\\schedules\\Hiroshi:spring.002\"",
-	"summer": "610 BusStop 22 5 2/800 Beach 10 13 2 sunbathe \"Strings\\schedules\\Hiroshi:summer.000\"/1430 Saloon 9 20 0/1750 Saloon 39 19 2 martini \"Strings\\schedules\\Hiroshi:summer.001\"/2100 Saloon 26 23 3/2350 BusStop 22 5 2 \"Strings\\schedules\\Hiroshi:summer.002\"",
-	"fall": "600 BusStop 22 5 2/700 Town 37 89 2/1030 Beach 57 8 1/1430 Saloon 9 20 0/1750 Saloon 39 19 2/2100 Saloon 26 23 3/2350 BusStop 22 5 2",
-	"winter": "600 BusStop 22 5 2/700 Saloon 9 20 0/1430 Saloon 9 20 0/1750 Saloon 39 19 2/2100 Saloon 26 23 3/2350 BusStop 22 5 2",
-	"rain": "600 BusStop 22 5 2/700 Saloon 9 20 0/1430 Saloon 9 20 0/1750 Saloon 39 19 2/2100 Saloon 26 23 3/2350 BusStop 22 5 2",
+	"spring.000": "Ahhhh!The sun feels great on my skin... I wish I could lay here forever!$7",
+	"spring.001": "Saloons, bars, clubs, even taverns are a great place to get to know everyone.$1#$b#Super-Models tend to turn their nose up to the common rabble.$2#$b#I think a common person carries amazing secrets with them.#$b#A smart guy would diversify their experiences.^A smart lady like yourself would do best diversifying their experiences.#$b#That's why you're out here.. isn't it, @?$1",
+	"spring.002": "I'm just waiting for my limo...",
 }
     </textarea>
 
@@ -335,7 +407,7 @@
 }
     </textarea>
 </div>
-
+<hr>
 <button onclick="generate()">Create content pack</button>
 
 <script>
@@ -597,9 +669,9 @@
   function switchTab(id) {
       var tabs = document.querySelectorAll('.stuff');
       for (const tab of tabs) {
-          tab.style.display = "none";
+          tab.classList.add("hidden");
       }
-      document.getElementById(id).style.display = "block";
+      document.getElementById(id).classList.remove("hidden");
       var tabs = document.querySelectorAll('#tabs span');
       for (const tab of tabs) {
           tab.classList.remove('active');
@@ -607,5 +679,133 @@
       document.getElementById("tab-" + id).classList.add("active");
   }
 
-  switchTab('manifest');
+  var currentSchedule;
+  function newSchedule() {
+      currentSchedule = {
+          condition: null,
+          elements: [],
+      };
+      document.querySelector("#schedules-all").classList.add("hidden");
+      document.querySelector("#schedule-new").classList.remove("hidden");
+      recreateSchedule();
+  }
+
+  function scheduleTypeChanged() {
+      var selected = document.querySelector("#schedule-type").value;
+      var selectors = document.querySelectorAll('.schedule-type-selector');
+      for (const s of selectors) {
+          s.classList.add('hidden');
+      }
+      document.querySelector('#schedule-' + selected).classList.remove('hidden');
+  }
+
+  function discardSchedule() {
+      document.querySelector('#schedules-all').classList.remove("hidden");
+      document.querySelector('#schedule-new').classList.add("hidden");
+  }
+
+  function addScheduleComponent() {
+      currentSchedule.elements.push({
+          hour: "6",
+          minute: "00",
+          map: null,
+          x: null,
+          y: null,
+          facing: null,
+      });
+      recreateSchedule();
+  }
+
+  function finishSchedule() {
+      var selected = document.querySelector("#schedule-type").value;
+      schedules.push({
+          condition: {}, //TODO
+          elements: [], //TODO
+      });
+      discardSchedule();
+  }
+
+  var currentScheduleElement = null;
+  function recreateSchedule() {
+      var list = document.querySelector("#schedule-components");
+      list.innerHTML = "";
+      for (const idx in currentSchedule.elements) {
+          const c = currentSchedule.elements[idx];
+          var item = document.createElement('li');
+          var hour = document.createElement('select');
+          hour.onchange = function(idx) {
+              currentSchedule.elements[idx].hour = hour.value;
+          }.bind(null, idx);
+          for (var h = 0; h <= 24; h++) {
+              var elem = document.createElement('option');
+              if (h.toString() == currentSchedule.elements[idx].hour) {
+                  elem.defaultSelected = true;
+              }
+              elem.textContent = h.toString();
+              hour.appendChild(elem);
+          }
+          item.appendChild(hour);
+          item.appendChild(document.createTextNode(':'));
+          var minute = document.createElement('select');
+          minute.onchange = function(idx) {
+              currentSchedule.elements[idx].minute = minute.value;
+          }.bind(null, idx);
+          for (var m = 0; m < 60; m += 10) {
+              var elem = document.createElement('option');
+              minString = m.toString();
+              if (minString.length < 2) {
+                  minString = "0" + minString;
+              }
+              if (m.toString() == currentSchedule.elements[idx].minute) {
+                  elem.defaultSelected = true;
+              }
+              elem.textContent = minString;
+              minute.appendChild(elem);
+          }
+          item.appendChild(minute);
+          if (currentSchedule.elements[idx].x !== null && currentSchedule.elements[idx].x !== null) {
+              item.appendChild(document.createTextNode(
+                  "at " + currentSchedule.elements[idx].x + ", " +
+                      currentSchedule.elements[idx].y +
+                      " (" + currentSchedule.elements[idx].map + ")"
+              ));
+          }
+          var posSelect = document.createElement('button');
+          posSelect.onclick = function(idx) {
+              document.querySelector('#schedule-new-choose-position').classList.remove('hidden');
+              document.querySelector('#schedule-new').classList.add('hidden');
+              currentScheduleElement = currentSchedule.elements[idx];
+              // TODO: set selected position to existing selection.
+          }.bind(null, idx);
+          posSelect.textContent = "Choose position";
+          item.appendChild(posSelect);
+          list.appendChild(item);
+      }
+  }
+
+  function chooseSelectedPosition() {
+      var coords = coordToTileCoord(selectedCoords);
+      currentScheduleElement.x = coords.x / 16;
+      currentScheduleElement.y = coords.y / 16;
+      currentScheduleElement.map = document.querySelector('#mapImage').value;
+      cancelChoosePosition();
+  }
+
+  function cancelChoosePosition() {
+      currentScheduleElement = null;
+      document.querySelector('#schedule-new-choose-position').classList.add('hidden');
+      document.querySelector('#schedule-new').classList.remove('hidden');
+      recreateSchedule();
+  }
+
+  for (var i = 1; i <= 28; i++) {
+      var opt = document.createElement('option');
+      opt.textContent = i;
+      document.querySelector('#schedule-month-day-choice').appendChild(opt);
+      var opt2 = document.createElement('option');
+      opt2.textContent = i;
+      document.querySelector('#schedule-season-day-day').appendChild(opt2);
+  }
+
+  switchTab('schedule');
 </script>
