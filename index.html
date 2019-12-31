@@ -48,7 +48,7 @@
       font-weight: bold;
   }
 
-  div.hidden {
+  .hidden {
       display: none;
   }
 </style>
@@ -221,7 +221,8 @@
 
 <div id="schedule" class="stuff">
   <div id="schedules-all">
-    <ul id="schdules-list">
+    <h5>All scheduled actions</h5>
+    <ul id="schedules-list">
     </ul>
     <button onclick="newSchedule()">Add new schedule</button>
   </div>
@@ -236,16 +237,16 @@
       <option value="rain">Rainy day</option>
       <!-- TODO: marriage schedules !-->
     </select>
-    <div id="schedule-seasonal" class="schedule-type-selector hidden">
-      <select id="schedule-season">
+    <div>
+      <select id="schedule-season" class="schedule-type-selector hidden">
         <option>spring</option>
         <option>summer</option>
         <option>fall</option>
         <option>winter</option>
       </select>
-    </div>
-    <div id="schedule-day-of-week" class="schedule-type-selector hidden">
-      <select id="schedule-week-day">
+      <select id="schedule-date" class="schedule-type-selector hidden">
+      </select>
+      <select id="schedule-day" class="schedule-type-selector hidden">
         <option value="Mon">Monday</option>
         <option value="Tue">Tuesday</option>
         <option value="Wed">Wednesday</option>
@@ -254,39 +255,6 @@
         <option value="Sat">Saturday</option>
         <option value="Sun">Sunday</option>
       </select>
-    </div>
-    <div id="schedule-day-of-week-season" class="schedule-type-selector hidden">
-      <select id="schedule-week-day-season-season">
-        <option>spring</option>
-        <option>summer</option>
-        <option>fall</option>
-        <option>winter</option>
-      </select>
-      <select id="schedule-week-day-season-day">
-        <option value="Mon">Monday</option>
-        <option value="Tue">Tuesday</option>
-        <option value="Wed">Wednesday</option>
-        <option value="Thu">Thursday</option>
-        <option value="Fri">Friday</option>
-        <option value="Sat">Saturday</option>
-        <option value="Sun">Sunday</option>
-      </select>
-    </div>
-    <div id="schedule-month-day" class="schedule-type-selector hidden">
-      <select id="schedule-month-day-choice">
-      </select>
-    </div>
-    <div id="schedule-season-day" class="schedule-type-selector hidden">
-      <select id="schedule-season-day-season">
-        <option>spring</option>
-        <option>summer</option>
-        <option>fall</option>
-        <option>winter</option>
-      </select>
-      <select id="schedule-season-day-day">
-      </select>
-    </div>
-    <div id="schedule-rain" class="schedule-type-selector hidden">
     </div>
     <h5>Actions</h5>
     <ol id="schedule-components">
@@ -440,7 +408,6 @@
       var remover = document.createElement('span');
       remover.className = "item-remover";
       remover.onclick = function() {
-          console.log("hi");
           this.parentNode.remove();
       };
       remover.textContent = "[X]";
@@ -448,8 +415,48 @@
       document.getElementById(id).appendChild(elem);
   }
 
-  var schedules = [];
+  var allSchedules = [];
   function regenerateSchedules(schedules) {
+      var list = document.querySelector("#schedules-list");
+      list.innerHTML = "";
+      for (const schedIdx in allSchedules) {
+          const s = allSchedules[schedIdx];
+          var item = document.createElement("li");
+          const labels = {
+              "seasonal": "Every day in {season}",
+              "day-of-week": "Every {day}",
+              "day-of-week-season": "Every {day} in {season}",
+              "month-day": "Every day {date} in all seasons",
+              "season-day": "Every day {date} in {season}",
+              "rain": "Every rainy day",
+          };
+          var label = labels[s.type];
+          for (const key of Object.keys(s.conditions)) {
+              label = label.replace("{" + key + "}", s.conditions[key]);
+          }
+          item.appendChild(document.createTextNode(label));
+
+          var edit = document.createElement("button");
+          edit.textContent = "edit";
+          edit.onclick = function(idx) {
+              currentSchedule = {
+                  elements: allSchedules[idx].elements,
+              };
+              currentScheduleIdx = idx;
+              editSchedule(allSchedules[idx].type, allSchedules[idx].conditions);
+          }.bind(null, schedIdx);
+          item.appendChild(edit);
+
+          var deleteButton = document.createElement("button");
+          deleteButton.textContent = "delete";
+          deleteButton.onclick = function(idx) {
+              allSchedules.splice(idx, 1);
+              regenerateSchedules();
+          }.bind(null, schedIdx);
+          item.appendChild(deleteButton);
+
+          list.appendChild(item);
+      }
   }
 
   function coordToTileCoord(coord) {
@@ -683,13 +690,35 @@
   }
 
   var currentSchedule;
+  var currentScheduleIdx = null;
   function newSchedule() {
       currentSchedule = {
-          condition: null,
           elements: [],
       };
+      currentScheduleIdx = null;
+      editSchedule();
+  }
+
+  function editSchedule(type, keys) {
       document.querySelector("#schedules-all").classList.add("hidden");
       document.querySelector("#schedule-new").classList.remove("hidden");
+      if (type !== undefined) {
+          var types = document.querySelector("#schedule-type");
+          for (const idx in types.options) {
+              if (types.options[idx].value == type) {
+                  types.selectedIndex = idx;
+              }
+          }
+          for (const k of Object.keys(keys)) {
+              var select = document.getElementById("schedule-" + k);
+              for (const idx in select.options) {
+                  if (select.options[idx].value == keys[k]) {
+                      select.selectedIndex = idx;
+                  }
+              }
+          }
+      }
+      scheduleTypeChanged();
       recreateSchedule();
   }
 
@@ -699,19 +728,34 @@
       for (const s of selectors) {
           s.classList.add('hidden');
       }
-      document.querySelector('#schedule-' + selected).classList.remove('hidden');
+      const components = {
+          "seasonal": ["schedule-season"],
+          "day-of-week": ["schedule-day"],
+          "day-of-week-season": ["schedule-season", "schedule-day"],
+          "month-day": ["schedule-date"],
+          "season-day": ["schedule-season", "schedule-date"],
+          "rain": [],
+      };
+      for (const id of components[selected]) {
+          document.getElementById(id).classList.remove('hidden');          
+      }
   }
 
   function discardSchedule() {
       document.querySelector('#schedules-all').classList.remove("hidden");
       document.querySelector('#schedule-new').classList.add("hidden");
+      currentSchedule = null;
+      if (currentScheduleIdx !== null) {
+          console.log("discarding existing schedule");
+          allSchedules.splice(currentScheduleIdx, 1);
+      }
+      regenerateSchedules();
   }
 
   function addScheduleComponent() {
       var last = currentSchedule.elements.length > 0 ?
           currentSchedule.elements[currentSchedule.elements.length - 1] :
           null;
-      console.log(currentSchedule.elements.length, last);
       currentSchedule.elements.push({
           hour: last ? last.hour : "6",
           minute: last ? last.minute : "00",
@@ -723,12 +767,38 @@
       recreateSchedule();
   }
 
+  // TODO: support reusing existing schedules with different conditions (GOTO)
+  // TODO: support schedule friendship checks
+  // TODO: support fallback conditions (eg. 11_6 in Abigail.json)
+
   function finishSchedule() {
       var selected = document.querySelector("#schedule-type").value;
-      schedules.push({
-          condition: {}, //TODO
-          elements: [], //TODO
-      });
+      var season = document.querySelector("#schedule-season").value;
+      var date = document.querySelector("#schedule-date").value;
+      var day = document.querySelector("#schedule-day").value;
+      const seasonalKinds = ["seasonal", "day-of-week-season", "season-day"];
+      const dayKinds = ["day-of-week", "day-of-week-season"];
+      const dateKinds = ["month-day", "season-day"];
+      var schedule = {
+          "type": selected,
+          "conditions": {},
+          "elements": currentSchedule.elements,
+      };
+      if (seasonalKinds.indexOf(selected) != -1) {
+          schedule.conditions.season = season;
+      }
+      if (dayKinds.indexOf(selected) != -1) {
+          schedule.conditions.day = day;
+      }
+      if (dateKinds.indexOf(selected) != -1) {
+          schedule.conditions.date = date;
+      }
+      if (currentScheduleIdx === null) {
+          allSchedules.push(schedule);
+      } else {
+          allSchedules[currentScheduleIdx] = schedule;
+          currentScheduleIdx = null;
+      }
       discardSchedule();
   }
 
@@ -843,10 +913,7 @@
   for (var i = 1; i <= 28; i++) {
       var opt = document.createElement('option');
       opt.textContent = i;
-      document.querySelector('#schedule-month-day-choice').appendChild(opt);
-      var opt2 = document.createElement('option');
-      opt2.textContent = i;
-      document.querySelector('#schedule-season-day-day').appendChild(opt2);
+      document.querySelector('#schedule-date').appendChild(opt);
   }
 
   switchTab('schedule');
