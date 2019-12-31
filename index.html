@@ -12,7 +12,7 @@
       padding: 0.2em;
   }
 
-  #gifts, #disposition, #manifest, #other {
+  #gifts, #disposition, #manifest, #schedule, #other {
       display: none;
   }
 
@@ -31,7 +31,39 @@
       text-decoration: underline;
       cursor: pointer;
   }
+
+  #tabs {
+      display: flex;
+      flex-direction: row;
+      border: 1px solid black;
+  }
+
+  #tabs span {
+      display: inline-block;
+      padding: 0.5em 1em;
+      cursor: pointer;
+      background: lightgrey;
+      border: 1px solid grey;
+  }
+
+  #tabs span:hover {
+      color: white;
+  }
+
+  #tabs span.active {
+      text-decoration: underline;
+      font-weight: bold;
+  }
 </style>
+
+<div id="tabs">
+  <span id="tab-manifest" onclick="switchTab('manifest')">General</span>
+  <span id="tab-disposition" onclick="switchTab('disposition')">Character</span>
+  <span id="tab-gifts" onclick="switchTab('gifts')">Gifts</span>
+  <span id="tab-schedule" onclick="switchTab('schedule')">Schedule</span>
+  <span id="tab-other" onclick="switchTab('other')">Other</span>
+</div>
+
 <div id="manifest" class="stuff">
   <div>
     <label for="modName">Mod name:</label>
@@ -561,4 +593,19 @@
               saveAs(content, "example.zip");
           });
   }
+
+  function switchTab(id) {
+      var tabs = document.querySelectorAll('.stuff');
+      for (const tab of tabs) {
+          tab.style.display = "none";
+      }
+      document.getElementById(id).style.display = "block";
+      var tabs = document.querySelectorAll('#tabs span');
+      for (const tab of tabs) {
+          tab.classList.remove('active');
+      }
+      document.getElementById("tab-" + id).classList.add("active");
+  }
+
+  switchTab('manifest');
 </script>
