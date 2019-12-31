@@ -59,6 +59,7 @@
   <span id="tab-gifts" onclick="switchTab('gifts')">Gifts</span>
   <span id="tab-schedule" onclick="switchTab('schedule')">Schedule</span>
   <span id="tab-other" onclick="switchTab('other')">Other</span>
+  <span id="tab-generate" onclick="switchTab('generate')">Generate</span>
 </div>
 
 <div id="manifest" class="stuff hidden">
@@ -364,8 +365,18 @@
 }
     </textarea>
 </div>
-<hr>
-<button onclick="generate()">Create content pack</button>
+
+<div class="stuff" id="generate">
+  <h3>Generate a <a href="https://www.nexusmods.com/stardewvalley/mods/1915">ContentPatcher</a>-compatible mod</h3>
+  <p>This will create a ZIP containing the appropriate NPC data files,
+    ready to be unzipped in your Stardew Valley <a href="https://stardewvalleywiki.com/Modding:Player_Guide/Getting_Started#Install_mods">mod folder.</a></p>
+  <p>Requirements:
+    <ul>
+      <li>SMAPI</li>
+      <li>ContentPatcher</li>
+    </ul>
+  <button onclick="generate()">Create content pack</button>
+</div>
 
 <script>
   var itemsXhr = new XMLHttpRequest();
