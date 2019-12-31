@@ -711,7 +711,7 @@
           map: null,
           x: null,
           y: null,
-          facing: null,
+          facing: 0,
       });
       recreateSchedule();
   }
@@ -779,6 +779,24 @@
           }.bind(null, idx);
           posSelect.textContent = "Choose position";
           item.appendChild(posSelect);
+
+          item.appendChild(document.createTextNode('facing'));
+          var facing = document.createElement('select');
+          facing.onchange = function() {
+              currentSchedule.elements[idx].facing = facing.value;
+          }.bind(null, idx);
+          var dirs = ["up", "right", "down", "left"];
+          for (var facingIdx in dirs) {
+              var opt = document.createElement('option');
+              if (facingIdx == currentSchedule.elements[idx].facing) {
+                  opt.defaultSelected = true;
+              }
+              opt.value = facingIdx;
+              opt.textContent = dirs[facingIdx];
+              facing.appendChild(opt);
+          }
+          item.appendChild(facing);
+
           list.appendChild(item);
       }
   }
