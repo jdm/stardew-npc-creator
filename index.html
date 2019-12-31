@@ -209,9 +209,10 @@
     <input id="npc-birthday-gift-text">
   </div>
 
-  <div>
+  <div style="margin-top: 1em;">
     <label for="items">Items:</label>
     <select id="items"></select>
+    <br>
     <button onclick="addItem('npc-gift-love')">Add love</button>
     <button onclick="addItem('npc-gift-like')">Add like</button>
     <button onclick="addItem('npc-gift-dislike')">Add dislike</button>
@@ -949,5 +950,5 @@
       document.querySelector('#schedule-date').appendChild(opt);
   }
 
-  switchTab('schedule');
+  switchTab('manifest');
 </script>
