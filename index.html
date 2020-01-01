@@ -265,7 +265,7 @@
     </ol>
     <button onclick="addScheduleComponent()">Add schedule action</button>
     <br><br>
-    <button onclick="finishSchedule()">Finish schedule</button>
+    <button id="finishSchedule" onclick="finishSchedule()">Finish schedule</button>
     <button onclick="discardSchedule()">Discard schedule</button>
   </div>
 </div>
@@ -824,6 +824,7 @@
   function recreateSchedule() {
       var list = document.querySelector("#schedule-components");
       list.innerHTML = "";
+      var anyMissingPositions = false;
       for (const idx in currentSchedule.elements) {
           const c = currentSchedule.elements[idx];
           var item = document.createElement('li');
@@ -868,6 +869,8 @@
                       currentSchedule.elements[idx].y +
                       " (" + currentSchedule.elements[idx].map + ")"
               ));
+          } else {
+              anyMissingPositions = true;
           }
 
           var posSelect = document.createElement('button');
@@ -912,6 +915,8 @@
 
           list.appendChild(item);
       }
+
+      document.querySelector("#finishSchedule").disabled = anyMissingPositions;
   }
 
   function chooseSelectedPosition(map, coords) {
