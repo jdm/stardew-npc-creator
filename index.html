@@ -788,6 +788,7 @@
   // TODO: support reusing existing schedules with different conditions (GOTO)
   // TODO: support schedule friendship checks
   // TODO: support fallback conditions (eg. 11_6 in Abigail.json)
+  // TODO: support scheduled dialogue
 
   function finishSchedule() {
       var selected = document.querySelector("#schedule-type").value;
@@ -912,6 +913,14 @@
           item.appendChild(facing);
 
           // TODO: show select for possible animations
+
+          var deleteButton = document.createElement('button');
+          deleteButton.textContent = "delete action";
+          deleteButton.onclick = function(idx) {
+              currentSchedule.elements.splice(idx, 1);
+              recreateSchedule();
+          }.bind(null, idx);
+          item.appendChild(deleteButton);
 
           list.appendChild(item);
       }
