@@ -58,6 +58,7 @@
   <span id="tab-disposition" onclick="switchTab('disposition')">Character</span>
   <span id="tab-gifts" onclick="switchTab('gifts')">Gifts</span>
   <span id="tab-schedule" onclick="switchTab('schedule')">Schedule</span>
+  <span id="tab-dialogue" onclick="switchTab('dialogue')">Dialogue</span>
   <span id="tab-other" onclick="switchTab('other')">Other</span>
   <span id="tab-generate" onclick="switchTab('generate')">Generate</span>
 </div>
@@ -65,17 +66,17 @@
 <div id="manifest" class="stuff hidden">
   <div>
     <label for="modName">Mod name:</label>
-    <input id="modName">
+    <input id="modName" required>
   </div>
 
   <div>
     <label for="author">Author:</label>
-    <input id="author">
+    <input id="author" required>
   </div>
 
   <div>
     <label for="description">Description:</label>
-    <input id="description">
+    <input id="description" required>
   </div>
 
   <div>
@@ -89,7 +90,7 @@
 <div id="disposition" class="stuff hidden">
   <div>
     <label for="npc-name">NPC's name:</label>
-    <input id="npc-name">
+    <input id="npc-name" required>
   </div>
 
   <div>
@@ -146,13 +147,9 @@
 
   <div>
     <label for="npc-birthday-season">Birthday:</label>
-    <select id="npc-birthday-season">
-      <option>spring</option>
-      <option>summer</option>
-      <option>fall</option>
-      <option>winter</option>
+    <select id="npc-birthday-season" class="season-picker">
     </select>
-    <input id="npc-birthday-date" type="number" value="1" min="1" max="28">
+    <select id="npc-birthday-date" class="date-picker"></select>
   </div>
 
   <div>
@@ -242,22 +239,11 @@
       <!-- TODO: marriage schedules !-->
     </select>
     <div>
-      <select id="schedule-season" class="schedule-type-selector hidden">
-        <option>spring</option>
-        <option>summer</option>
-        <option>fall</option>
-        <option>winter</option>
+      <select id="schedule-season" class="season-picker schedule-type-selector hidden">
       </select>
-      <select id="schedule-date" class="schedule-type-selector hidden">
+      <select id="schedule-date" class="date-picker schedule-type-selector hidden">
       </select>
-      <select id="schedule-day" class="schedule-type-selector hidden">
-        <option value="Mon">Monday</option>
-        <option value="Tue">Tuesday</option>
-        <option value="Wed">Wednesday</option>
-        <option value="Thu">Thursday</option>
-        <option value="Fri">Friday</option>
-        <option value="Sat">Saturday</option>
-        <option value="Sun">Sunday</option>
+      <select id="schedule-day" class="day-picker schedule-type-selector hidden">
       </select>
     </div>
     <h5>Actions</h5>
@@ -270,6 +256,44 @@
   </div>
 </div>
 
+<div id="dialogue" class="stuff hidden">
+  <div id="dialogue-all">
+    <ul id="dialogue-list">
+    </ul>
+    <br>
+    <button onclick="addDialogue()">Add new dialogue</button>
+  </div>
+  <div id="dialogue-new" class="hidden">
+    <h4>When will be the dialogue be used?</h4>
+    <select id="dialogue-type" onchange="dialogueTypeChanged()">
+      <option value="intro">One-time introduction</option>
+      <option value="day">Day of week, all seasons</option>
+      <option value="day-season">Day of week, particular season</option>
+      <option value="date-season">Specific date in particular season</option>
+      <!-- TODO: support marriage-related dialogue -->
+      <!-- TODO: support danceRejection, divorced, [location]_Entry -->
+      <!-- TODO: support [location]_[x]_[y], [location]_[dayName], [location] -->
+      <!-- TODO: support hearts -->
+      <!-- TODO: support first or later year -->
+    </select>
+    <div>
+      <select id="dialogue-season" class="season-picker dialogue-type-selector hidden">
+      </select>
+      <select id="dialogue-day" class="day-picker dialogue-type-selector hidden">
+      </select>
+      <select id="dialogue-date" class="date-picker dialogue-type-selector hidden">
+      </select>
+    </div>
+    <h5>Dialogue elements</h5>
+    <ol id="dialogue-specific-list">
+    </ol>
+    <button onclick="addDialogueElement()">Add dialogue element</button>
+    <br><br>
+    <button id="dialogue-finalize" onclick="finalizeDialogue()">Finish dialogue</button>
+    <button onclick="discardDialogue()">Discard</button>
+  </div>
+</div>
+
 <div id="other" class="stuff hidden">
   <p>
     <label for="scheduleDialogue">ScheduleDialogue.json</label>
@@ -278,24 +302,6 @@
 	"spring.000": "Ahhhh!The sun feels great on my skin... I wish I could lay here forever!$7",
 	"spring.001": "Saloons, bars, clubs, even taverns are a great place to get to know everyone.$1#$b#Super-Models tend to turn their nose up to the common rabble.$2#$b#I think a common person carries amazing secrets with them.#$b#A smart guy would diversify their experiences.^A smart lady like yourself would do best diversifying their experiences.#$b#That's why you're out here.. isn't it, @?$1",
 	"spring.002": "I'm just waiting for my limo...",
-}
-    </textarea>
-
-  <p>
-    <label for="Dialogue">Dialogue.json</label>
-    <textarea id="dialogue">
-{
-
-	"Introduction": "Hello, @!  That symbol I used tells me to use your name.  I can also use %farm to mention your farm.#$b#That is an uninterrupted break.. Keeps the dialogue going.#$e#This was a normal break... meaning you have to talk to me again.#$b#That should cover the basic dialogue.",
-	"Mon": "Hey @, I got a quick question for you...#$b#$q 6000/6001 mon_template#Do you know how to make question events?#$r 6000 250 mon_yes#Sure do#$r 6001 500 mon_no#I don't know how",
-	"mon_yes": "That's great to know... You should use them once in a while to help develop closer bonds to your NPC",
-	"mon_no": "No? Well let's look at my question.#$b# The first part is the question indicator.. the dollar sign+ the q.. This tells the game that I am about to ask a question.#$b#The first set of numbers are my response IDs.  The game will store the response to these numbers. #$b#The mon_template is my fallback... how I talk to you after the question has been answered.#$b# The dollar sign + r indicates that you are starting responses, the first number is the ID of the response and the second number is how many friendship points it gives. One heart is 250 points.  It also needs a response dialogue from me as well.#$b#Notice that responses and questions are divided by hashtags.",
-	"mon_template": "$p 6000#If you answered yes... You will see this dialogue.|If you did not, you will see this dialogue.",
-	"Tue": "MissCoriel can be helpful in many dialogue and events.  You can reach her on discord!#$b# Her ID is MissCoriel#7989!",
-	"Wed": "Portrait expressions are important to convey the scene.$1#$b#When making portraits, remember this:#$b#1 is happy, 2 is sad, 3 is unique, 4 is blushing, 5 is angry.#$b#You can have up to 12 portraits as far as I know.",
-	"Thu": "Some dialogue is found elsewhere in the contents.. I will help you find the most relavent.",
-	"Fri": "You can also give people items like this. [70]#$b#Use Cane's Resource to see Item IDs and other important things.",
-	
 }
     </textarea>
 
@@ -669,8 +675,34 @@
           }).join('/');
       }
 
+      var dialogueData = {};
+      for (const dialogueIdx in dialogues) {
+          const dialogue = dialogues[dialogueIdx];
+          const name = {
+              "intro": () => ["Introduction"],
+              "day": () => [dialogue.conditions.day],
+              "day-season": () => [dialogue.conditions.season, dialogue.conditions.day],
+              "date-season": () => [dialogue.conditions.season, dialogue.conditions.date],
+          };
+          var dialogueEntry = "";
+          for (const element of dialogue.elements) {
+              dialogueEntry += element.text;
+              if (element.portrait !== "") {
+                  dialogueEntry += "$" + element.portrait + "#";
+              }
+              if (dialogueIdx < dialogues.length - 1) {
+                  if (element.isBreak) {
+                      dialogueEntry += "$e#";
+                  } else {
+                      dialogueEntry += "$b#";
+                  }
+              }
+          }
+          var entryName = name[dialogue.type]().join('_');
+          dialogueData[entryName] = dialogueEntry;
+      }
+
       var scheduleDialogue = document.querySelector('#scheduleDialogue').textContent;
-      var dialogue = document.querySelector('#dialogue').textContent;
       var marriageDialogue = document.querySelector('#marriageDialogue').textContent;
 
       var zip = new JSZip();
@@ -682,7 +714,7 @@
       scheduleDir.file("ScheduleDialogue.json", scheduleDialogue);
   
       var dialogueDir = assets.folder("Dialogue");
-      dialogueDir.file("Dialogue.json", dialogue);
+      dialogueDir.file("Dialogue.json", JSON.stringify(dialogueData, undefined, 4));
       dialogueDir.file("MarriageDialogue.json", marriageDialogue);
 
       var image = assets.folder("Image");
@@ -1034,10 +1066,233 @@
       redrawMap(ctx, mapChooser.value, null, null, false);
   }
 
-  for (var i = 1; i <= 28; i++) {
-      var opt = document.createElement('option');
-      opt.textContent = i;
-      document.querySelector('#schedule-date').appendChild(opt);
+  var dialogues = [];
+  var currentDialogue = null;
+  var currentDialogueIdx = null;
+  function addDialogue() {
+      currentDialogueIdx = null;
+      currentDialogue = {
+          type: null,
+          conditions: {},
+          elements: [],
+      };
+      showDialogueEditor();
+  }
+
+  function showDialogueEditor() {
+      document.querySelector("#dialogue-all").classList.add('hidden');
+      document.querySelector("#dialogue-new").classList.remove('hidden');
+
+      for (const opt of document.querySelector("#dialogue-type").options) {
+          if (opt.value == currentDialogue.type) {
+              opt.selected = true;
+          }
+      }
+
+      const keys = ["season", "day", "date"];
+      for (const key of keys) {
+          if (key in currentDialogue.conditions) {
+              for (const opt of document.getElementById("dialogue-" + key).options) {
+                  if (opt.value == currentDialogue.conditions[key]) {
+                      opt.selected = true;
+                  }
+              }
+          }
+      }
+
+      dialogueTypeChanged();
+      recreateDialogue();
+  }
+
+  function dialogueTypeChanged() {
+      var selected = document.querySelector("#dialogue-type").value;
+      var selectors = document.querySelectorAll('.dialogue-type-selector');
+      for (const s of selectors) {
+          s.classList.add('hidden');
+      }
+      const components = {
+          "intro": [],
+          "day": ["dialogue-day"],
+          "day-season": ["dialogue-day", "dialogue-season"],
+          "date-season": ["dialogue-date", "dialogue-season"],
+      };
+      for (const id of components[selected]) {
+          document.getElementById(id).classList.remove('hidden');
+      }
+  }
+
+  function addDialogueElement() {
+      currentDialogue.elements.push({
+          text: "",
+          portrait: "",
+          isBreak: false,
+      });
+      recreateDialogue();
+  }
+
+  function finalizeDialogue() {
+      var dialogueType = document.querySelector('#dialogue-type').value;
+      const keys = {
+          "intro": [],
+          "day": ["day"],
+          "day-season": ["day", "season"],
+          "date-season": ["date", "season"],
+      };
+      currentDialogue.type = dialogueType;
+      currentDialogue.conditions = {};
+      for (const key of keys[dialogueType]) {
+          currentDialogue.conditions[key] = document.getElementById('dialogue-' + key).value;
+      }
+      if (currentDialogueIdx !== null) {
+          dialogues[currentDialogueIdx] = currentDialogue;
+      } else {
+          dialogues.push(currentDialogue);
+      }
+      discardDialogue();
+  }
+
+  function discardDialogue() {
+      document.querySelector("#dialogue-new").classList.add('hidden');
+      document.querySelector("#dialogue-all").classList.remove('hidden');
+      currentDialogue = null;
+      regenerateAllDialogues();
+  }
+
+  function recreateDialogue() {
+      var list = document.querySelector("#dialogue-specific-list");
+      list.innerHTML = "";
+      document.querySelector('#dialogue-finalize').disabled = true;
+
+      for (const elementIdx in currentDialogue.elements) {
+          document.querySelector('#dialogue-finalize').disabled = false;
+
+          var element = currentDialogue.elements[elementIdx];
+          var li = document.createElement("li");
+
+          li.appendChild(document.createTextNode("Dialogue:"));
+          var text = document.createElement("input");
+          text.value = element.text;
+          text.onchange = function(idx) {
+              currentDialogue.elements[idx].text = this.value;
+          }.bind(text, elementIdx);
+          li.appendChild(text);
+
+          li.appendChild(document.createTextNode("New portrait:"));
+
+          var portrait = document.createElement("select");
+          portrait.onchange = function(idx) {
+              currentDialogue.elements[idx].portrait = this.value;
+          }.bind(portrait, elementIdx);
+          // TODO: support custom portraits
+          const portraits = ["neutral", "happy", "sad", "unique", "love", "angry"];
+          var opt = document.createElement("option");
+          opt.textContent = "";
+          portrait.appendChild(opt);
+          for (const pIndex in portraits) {
+              var opt = document.createElement("option");
+              opt.textContent = portraits[pIndex];
+              opt.value = pIndex;
+              if (pIndex == element.portrait) {
+                  opt.defaultSelected = true;
+              }
+              portrait.appendChild(opt);
+          }
+          li.appendChild(portrait);
+
+          li.appendChild(document.createTextNode("End current dialogue?"));
+
+          var isBreak = document.createElement("input");
+          isBreak.type = "checkbox";
+          isBreak.onchange = function(idx) {
+              currentDialogue.elements[idx].isBreak = this.checked;
+          }.bind(isBreak, elementIdx);
+          isBreak.checked = element.isBreak;
+          li.appendChild(isBreak);
+
+          var deleteButton = document.createElement("button");
+          deleteButton.textContent = "delete";
+          deleteButton.onclick = function(idx) {
+              currentDialogue.elements.splice(idx, 1);
+              recreateDialogue();
+          }.bind(deleteButton, elementIdx);
+          li.appendChild(deleteButton);
+
+          list.appendChild(li);
+      }
+  }
+
+  function regenerateAllDialogues() {
+      var list = document.querySelector("#dialogue-list");
+      list.innerHTML = "";
+      for (const dialogueIdx in dialogues) {
+          const dialogue = dialogues[dialogueIdx];
+          var li = document.createElement("li");
+
+          const name = {
+              "intro": () => "Introduction",
+              "day": () => "Every " + dialogue.conditions.day,
+              "day-season": () => dialogue.conditions.day + " in " + dialogue.conditions.season,
+              "date-season": () => dialogue.conditions.season + " " + dialogue.conditions.date,
+          };
+          li.appendChild(document.createTextNode(name[dialogue.type]()));
+
+          var editButton = document.createElement('button');
+          editButton.textContent = "edit";
+          editButton.onclick = function(idx) {
+              editDialogue(dialogues[idx], idx);
+          }.bind(editButton, dialogueIdx);
+          li.appendChild(editButton);
+
+          var deleteButton = document.createElement('button');
+          deleteButton.textContent = "delete";
+          deleteButton.onclick = function(idx) {
+              dialogues.splice(idx, 1);
+              regenerateAllDialogues();
+          }.bind(editButton, dialogueIdx);
+          li.appendChild(deleteButton);
+
+          list.appendChild(li);
+      }
+  }
+
+  function editDialogue(dialogue, idx) {
+      currentDialogueIdx = idx;
+      currentDialogue = {
+          type: dialogue.type,
+          conditions: Object.assign({}, dialogue.conditions),
+          elements: dialogue.elements.slice(0),
+      };
+      showDialogueEditor();
+  }
+
+  var datePickers = document.querySelectorAll('.date-picker');
+  for (const picker of datePickers) {
+      for (var i = 1; i <= 28; i++) {
+          var opt = document.createElement('option');
+          opt.textContent = i;
+          picker.appendChild(opt);
+      }
+  }
+
+  var dayPickers = document.querySelectorAll('.day-picker');
+  for (const picker of dayPickers) {
+      const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      for (const day of days) {
+          var opt = document.createElement('option');
+          opt.textContent = day;
+          opt.value = day.slice(0, 3);
+          picker.appendChild(opt);
+      }
+  }
+
+  var seasonPickers = document.querySelectorAll('.season-picker');
+  for (const picker of seasonPickers) {
+      const seasons = ["spring", "summer", "fall", "winter"];
+      for (const season of seasons) {
+          var opt = document.createElement('option');
+          opt.textContent = season;
+          picker.appendChild(opt);
+      }
   }
 
   switchTab('manifest');
