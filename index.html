@@ -490,10 +490,7 @@
       };
   }
 
-  function redrawMap(ctx, map, hovered, selected, newMap) {
-      if (newMap) {
-          selectedCoords = null;
-      }
+  function redrawMap(ctx, map, hovered, selected) {
       ctx.globalAlpha = 1.0;
       ctx.canvas.width = mapImages[map].width
       ctx.canvas.height = mapImages[map].height;
@@ -1025,7 +1022,12 @@
 
       var mapChooser = document.createElement('select');
       mapChooser.onchange = function() {
-          redrawMap(ctx, this.value, null, null, true);
+          selectedCoords = null;
+          var buttons = document.querySelectorAll("button[pickerChoose]");
+          for (const b of buttons) {
+              b.disabled = true;
+          }
+          redrawMap(ctx, this.value, null, null);
       };
       for (const map of maps) {
           var opt = document.createElement('option');
@@ -1040,13 +1042,17 @@
       var ctx = canvas.getContext('2d');
       canvas.onmousemove = function(evt) {
           var coords = canvasMouseCoordinates(canvas, evt);
-          redrawMap(ctx, mapChooser.value, coords, selectedCoords, false);
+          redrawMap(ctx, mapChooser.value, coords, selectedCoords);
       };
       canvas.onclick = function(evt) {
           var coords = canvasMouseCoordinates(canvas, evt);
           selectedCoords = coords;
-          chooseButton.disabled = false;
-          redrawMap(ctx, mapChooser.value, coords, selectedCoords, false);
+
+          var buttons = document.querySelectorAll("button[pickerChoose]");
+          for (const b of buttons) {
+              b.disabled = false;
+          }
+          redrawMap(ctx, mapChooser.value, coords, selectedCoords);
       };
 
       function restore() {
@@ -1056,6 +1062,7 @@
       }
 
       var chooseButton = document.createElement('button');
+      chooseButton.toggleAttribute('pickerChoose');
       chooseButton.onclick = function() {
           restore();
           var coords = coordToTileCoord(selectedCoords);
@@ -1079,6 +1086,9 @@
       }
 
       picker.appendChild(mapChooser);
+      picker.appendChild(chooseButton.cloneNode(true));
+      picker.appendChild(cancelButton.cloneNode(true));
+      picker.appendChild(document.createElement('br'));
       picker.appendChild(canvas);
       picker.appendChild(document.createElement('br'));
       picker.appendChild(chooseButton);
