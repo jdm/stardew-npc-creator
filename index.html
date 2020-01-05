@@ -284,6 +284,26 @@
       <select id="dialogue-date" class="date-picker dialogue-type-selector hidden">
       </select>
     </div>
+    <div id="dialogue-palette" class="hidden">
+      <h5>Special replacements</h5>
+      <button onclick="insertReplacer(this)" replacer="@">Player name</button>
+      <button onclick="insertReplacer(this)" replacer="{{NPC}}">NPC name</button>
+      <button onclick="insertReplacer(this)" replacer="%adj">Random adjective</button>
+      <button onclick="insertReplacer(this)" replacer="%noun">Random noun</button>
+      <button onclick="insertReplacer(this)" replacer="%place">Random place name</button>
+      <button onclick="insertReplacer(this)" replacer="%spouse">Player's spouse name</button>
+      <button onclick="insertReplacer(this)" replacer="%name">Random name</button>
+      <button onclick="insertReplacer(this)" replacer="%firstnameletter">Player nickname</button>
+      <button onclick="insertReplacer(this)" replacer="%time">Current time</button>
+      <button onclick="insertReplacer(this)" replacer="%band">Sam's band name</button>
+      <button onclick="insertReplacer(this)" replacer="%book">Elliot's book name</button>
+      <button onclick="insertReplacer(this)" replacer="%rival">Random same-gender name</button>
+      <button onclick="insertReplacer(this)" replacer="%pet">Pet name</button>
+      <button onclick="insertReplacer(this)" replacer="%farm">Farm name</button>
+      <button onclick="insertReplacer(this)" replacer="%favorite">Player's favorite</button>
+      <button onclick="insertReplacer(this)" replacer="%kid1">First child name</button>
+      <button onclick="insertReplacer(this)" replacer="%kid2">Second child name</button>
+    </div>
     <h5>Dialogue elements</h5>
     <ol id="dialogue-specific-list">
     </ol>
@@ -686,7 +706,7 @@
           };
           var dialogueEntry = "";
           for (const element of dialogue.elements) {
-              dialogueEntry += element.text;
+              dialogueEntry += element.text.replace("{{NPC}}", npcName);
               if (element.portrait !== "") {
                   dialogueEntry += "$" + element.portrait + "#";
               }
@@ -1161,20 +1181,26 @@
   function recreateDialogue() {
       var list = document.querySelector("#dialogue-specific-list");
       list.innerHTML = "";
+      document.querySelector("#dialogue-palette").classList.add('hidden');
       document.querySelector('#dialogue-finalize').disabled = true;
 
       for (const elementIdx in currentDialogue.elements) {
           document.querySelector('#dialogue-finalize').disabled = false;
+          document.querySelector("#dialogue-palette").classList.remove('hidden');
 
           var element = currentDialogue.elements[elementIdx];
           var li = document.createElement("li");
 
           li.appendChild(document.createTextNode("Dialogue:"));
           var text = document.createElement("input");
+          text.size = 40;
           text.value = element.text;
           text.onchange = function(idx) {
               currentDialogue.elements[idx].text = this.value;
           }.bind(text, elementIdx);
+          text.onblur = function() {
+              lastFocusedDialogue = this;
+          };
           li.appendChild(text);
 
           li.appendChild(document.createTextNode("New portrait:"));
@@ -1263,6 +1289,16 @@
           elements: dialogue.elements.slice(0),
       };
       showDialogueEditor();
+  }
+
+  var lastFocusedDialogue = null;
+  function insertReplacer(source) {
+      if (lastFocusedDialogue) {
+          lastFocusedDialogue.value += source.getAttribute("replacer");
+          // Firefox doesn't fire trusted onchange event for programmatic changes.
+          lastFocusedDialogue.dispatchEvent(new Event('change'));
+          lastFocusedDialogue.focus();
+      }
   }
 
   var datePickers = document.querySelectorAll('.date-picker');
